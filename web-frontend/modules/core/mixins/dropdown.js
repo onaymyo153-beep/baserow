@@ -180,9 +180,12 @@ export default {
       fixedItemsImmutable: this.fixedItems,
       reactiveMultiple: { value: this.multiple }, // Used for provide
       isDropdown: true, // Used for dropdown items to retrieve the parent dropdown component
-      registeredDropdownItems: [], // For storing registered dropdown items
+      refreshKey: 0, // Reactive counter to trigger computed property re-evaluation
       hideCleanupFunctions: [], // Store cleanup functions to call on hide
     }
+  },
+  created() {
+    this.registeredDropdownItems = []
   },
   computed: {
     // Support both Vue 2 (value) and Vue 3 (modelValue)
@@ -190,13 +193,13 @@ export default {
       return this.modelValue !== undefined ? this.modelValue : this.value
     },
     selectedName() {
-      return this.getSelectedProperty(this.currentValue, 'name')
+      return (this.refreshKey, this.getSelectedProperty(this.currentValue, 'name'))
     },
     selectedIcon() {
-      return this.getSelectedProperty(this.currentValue, 'icon')
+      return (this.refreshKey, this.getSelectedProperty(this.currentValue, 'icon'))
     },
     selectedImage() {
-      return this.getSelectedProperty(this.currentValue, 'image')
+      return (this.refreshKey, this.getSelectedProperty(this.currentValue, 'image'))
     },
     realTabindex() {
       // We don't want to be able focus if the dropdown is disabled or if we have
@@ -544,18 +547,10 @@ export default {
      * @return {boolean}
      */
     hasValue() {
-      for (const item of this.getDropdownItemComponents()) {
-        if (this.multiple) {
-          for (const value of this.currentValue) {
-            if (_.isEqual(item.value, value)) {
-              return true
-            }
-          }
-        } else if (_.isEqual(item.value, this.currentValue)) {
-          return true
-        }
+      if (this.multiple) {
+        return this.selectedName.some((name) => name !== '')
       }
-      return false
+      return this.selectedName !== '' || !!this.selectedIcon || !!this.selectedImage
     },
     /**
      * A nasty hack, but in some cases the dropdownItemComponents have not yet been loaded when the
@@ -565,9 +560,7 @@ export default {
      * when the component is mounted. At this moment the dropdownItemComponents have been added.
      */
     forceRefreshSelectedValue() {
-      // TODO MIG this._computedWatchers.selectedName.run()
-      // TODO MIG this._computedWatchers.selectedIcon.run()
-      this.$forceUpdate()
+      this.refreshKey += 1
     },
     /**
      * Method that is called when the arrow up or arrow down key is pressed. Based on

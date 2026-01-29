@@ -112,7 +112,7 @@ ci-test:
 # Update Jest snapshots
 [group('3 - testing')]
 update-snapshots:
-    yarn run jest --updateSnapshot
+    yarn test --update
 
 # =============================================================================
 # Development

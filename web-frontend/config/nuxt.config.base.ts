@@ -108,4 +108,9 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: process.env.NODE_ENV !== 'development',
   },
+  vue: {
+    compilerOptions: {
+      comments: false,
+    },
+  },
 })
